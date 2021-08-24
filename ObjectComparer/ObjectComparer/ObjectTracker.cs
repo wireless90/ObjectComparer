@@ -69,10 +69,11 @@ namespace ObjectComparer
             return this;
         }
 
-        public ObjectTracker<TResult> Track<TObjectTypeToTrack, TKeyType, TPropertyType>(
+        public ObjectTracker<TResult> Track<TObjectTypeToTrack, TPropertyType>(
             TObjectTypeToTrack before,
             TObjectTypeToTrack after,
             params Expression<Func<TObjectTypeToTrack, TPropertyType>>[] fieldToTrackExpressions)
+
         {
             BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public;
 
@@ -191,7 +192,7 @@ namespace ObjectComparer
                 Difference deletionDifference = new Difference()
                 {
                     Type = TypeOfDifference.Delete,
-                    PropertyName = $"{typeof(TObjectTypeToTrack).Name}.{typeof(TPropertyType).Name}",
+                    PropertyName = $"{typeof(TObjectTypeToTrack).Name}.{((MemberExpression)fieldToTrackExpression.Body).Member.Name}",
                     NewValue = null,
                     OldValue = deletedFields[i].ToString()
                 };
@@ -233,7 +234,7 @@ namespace ObjectComparer
                 Difference amendmentDifference = new Difference()
                 {
                     Type = TypeOfDifference.Amend,
-                    PropertyName = $"{typeof(TObjectTypeToTrack).Name}.{typeof(TPropertyType).Name}",
+                    PropertyName = $"{typeof(TObjectTypeToTrack).Name}.{((MemberExpression)fieldToTrackExpression.Body).Member.Name}",
                     NewValue = afterAmendedFields[i].ToString(),
                     OldValue = beforeAmendedFields[i].ToString()
                 };
