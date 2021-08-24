@@ -1,8 +1,18 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using System.Runtime.Serialization;
 
 namespace ObjectComparer
 {
-    public enum TypeOfDifference {  Add, Delete, Amend };
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum TypeOfDifference {
+        [EnumMember(Value = nameof(Add))]
+        Add,
+        [EnumMember(Value = nameof(Delete))]
+        Delete,
+        [EnumMember(Value = nameof(Amend))]
+        Amend 
+    };
 
     public class Difference
     {
