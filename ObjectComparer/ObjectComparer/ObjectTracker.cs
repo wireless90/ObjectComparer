@@ -76,9 +76,9 @@ namespace ObjectComparer
                                             .ToList();
 
             List<TPropertyType> addedFields = after
-                                                    .Where(entity => addedKeys.Contains(keyExpression.Compile()(entity)))
-                                                    .Select(fieldToTrackExpression.Compile())
-                                                    .ToList();
+                                                .Where(entity => addedKeys.Contains(keyExpression.Compile()(entity)))
+                                                .Select(fieldToTrackExpression.Compile())
+                                                .ToList();
 
             List<Difference> addedDifferences = new List<Difference>();
 
