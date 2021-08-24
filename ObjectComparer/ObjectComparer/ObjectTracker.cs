@@ -11,9 +11,9 @@ namespace ObjectComparer
     {
         private List<TResult> _differences;
 
-        private Func<List<Difference>, List<TResult>> _customDeletion;
-        private Func<List<Difference>, List<TResult>> _customAddition;
-        private Func<List<Difference>, List<TResult>> _customAmendment;
+        private Func<List<Difference>, List<TResult>> _customDeletionCallBack;
+        private Func<List<Difference>, List<TResult>> _customAdditionCallBack;
+        private Func<List<Difference>, List<TResult>> _customAmendmentCallBack;
 
         public ObjectTracker()
             :this(null, null, null)
@@ -22,30 +22,38 @@ namespace ObjectComparer
         }
 
         public ObjectTracker(
-            Func<List<Difference>, List<TResult>> customAddition,
-            Func<List<Difference>, List<TResult>> customDeletion,
-            Func<List<Difference>, List<TResult>> customAmendment)
+            Func<List<Difference>, List<TResult>> customAdditionCallBack,
+            Func<List<Difference>, List<TResult>> customDeletionCallBack,
+            Func<List<Difference>, List<TResult>> customAmendmentCallBack)
         {
             _differences = new List<TResult>();
-            _customAddition = customAddition;
-            _customDeletion = customDeletion;
-            _customAmendment = customAmendment;
+            _customAdditionCallBack = customAdditionCallBack;
+            _customDeletionCallBack = customDeletionCallBack;
+            _customAmendmentCallBack = customAmendmentCallBack;
         }
-        public ObjectTracker<TResult> SetCustomAddition(Func<List<Difference>, List<TResult>> customAddition)
+        public ObjectTracker<TResult> SetAdditionCallback(Func<List<Difference>, List<TResult>> customAdditionCallBack)
         {
-            _customAddition = customAddition;
+            _customAdditionCallBack = customAdditionCallBack;
             return this;
         }
 
-        public ObjectTracker<TResult> SetCustomDeletion(Func<List<Difference>, List<TResult>> customDeletion)
+        public ObjectTracker<TResult> SetDeletionCallback(Func<List<Difference>, List<TResult>> customDeletionCallback)
         {
-            _customDeletion = customDeletion;
+            _customDeletionCallBack = customDeletionCallback;
             return this;
         }
 
-        public ObjectTracker<TResult> SetCustomAmendment(Func<List<Difference>, List<TResult>> customAmendment)
+        public ObjectTracker<TResult> SetAmendmentCallback(Func<List<Difference>, List<TResult>> customAmendmentCallback)
         {
-            _customAmendment= customAmendment;
+            _customAmendmentCallBack = customAmendmentCallback;
+            return this;
+        }
+
+        public ObjectTracker<TResult> SetCallback(Func<List<Difference>, List<TResult>> customCallback)
+        {
+            SetAdditionCallback(customCallback);
+            SetDeletionCallback(customCallback);
+            SetAmendmentCallback(customCallback);
             return this;
         }
 
@@ -118,19 +126,19 @@ namespace ObjectComparer
                 }
             }
 
-            if (_customAddition == null)
+            if (_customAdditionCallBack == null)
                 throw new ObjectTrackerException("Custom Addition procedure not set.");
 
-            if (_customDeletion == null)
+            if (_customDeletionCallBack == null)
                 throw new ObjectTrackerException("Custom Deletion procedure not set.");
 
-            if (_customAmendment == null)
+            if (_customAmendmentCallBack == null)
                 throw new ObjectTrackerException("Custom Amendment procedure not set.");
 
 
-            _differences.AddRange(_customAddition(differences.Where(x => x.Type == TypeOfDifference.Add).ToList()));
-            _differences.AddRange(_customDeletion(differences.Where(x => x.Type == TypeOfDifference.Delete).ToList()));
-            _differences.AddRange(_customAmendment(differences.Where(x => x.Type == TypeOfDifference.Amend).ToList()));
+            _differences.AddRange(_customAdditionCallBack(differences.Where(x => x.Type == TypeOfDifference.Add).ToList()));
+            _differences.AddRange(_customDeletionCallBack(differences.Where(x => x.Type == TypeOfDifference.Delete).ToList()));
+            _differences.AddRange(_customAmendmentCallBack(differences.Where(x => x.Type == TypeOfDifference.Amend).ToList()));
 
 
             return this;
@@ -163,10 +171,10 @@ namespace ObjectComparer
                 addedDifferences.Add(addedDifference);
             }
 
-            if (_customAddition == null)
+            if (_customAdditionCallBack == null)
                 throw new ObjectTrackerException("Custom Addition procedure not set.");
 
-            return _customAddition(addedDifferences);
+            return _customAdditionCallBack(addedDifferences);
         }
 
         private List<TResult> TrackDeletions<TObjectTypeToTrack, TKeyType, TPropertyType>(
@@ -200,10 +208,10 @@ namespace ObjectComparer
                 deletionDifferences.Add(deletionDifference);
             }
 
-            if (_customDeletion == null)
+            if (_customDeletionCallBack == null)
                 throw new ObjectTrackerException("Custom Deletion procedure not set.");
 
-            return _customDeletion(deletionDifferences);
+            return _customDeletionCallBack(deletionDifferences);
         }
 
         private List<TResult> TrackAmendments<TObjectTypeToTrack, TKeyType, TPropertyType>(
@@ -242,10 +250,10 @@ namespace ObjectComparer
                 amendmentDifferences.Add(amendmentDifference);
             }
 
-            if (_customAmendment == null)
+            if (_customAmendmentCallBack == null)
                 throw new ObjectTrackerException("Custom Amendment procedure not set.");
 
-            return _customAmendment(amendmentDifferences);
+            return _customAmendmentCallBack(amendmentDifferences);
         }
 
 
@@ -258,11 +266,9 @@ namespace ObjectComparer
         public ObjectTracker()
             
         {
-            SetCustomAddition(CustomAdditionDeletionAmendment);
-            SetCustomDeletion(CustomAdditionDeletionAmendment);
-            SetCustomAmendment(CustomAdditionDeletionAmendment);
+            SetCallback(CustomAdditionDeletionAmendmentCallback);
         }
 
-        private List<Difference> CustomAdditionDeletionAmendment(List<Difference> differences) => differences;
+        private List<Difference> CustomAdditionDeletionAmendmentCallback(List<Difference> differences) => differences;
     }
 }
