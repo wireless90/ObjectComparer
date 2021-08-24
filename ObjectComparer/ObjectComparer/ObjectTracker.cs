@@ -87,7 +87,7 @@ namespace ObjectComparer
                 Difference addedDifference = new Difference()
                 {
                     Type = TypeOfDifference.Add,
-                    PropertyName = $"{typeof(TObjectTypeToTrack).Name}.{typeof(TPropertyType).Name}",
+                    PropertyName = $"{typeof(TObjectTypeToTrack).Name}.{((MemberExpression)fieldToTrackExpression.Body).Member.Name}",
                     NewValue = addedFields[i].ToString(),
                     OldValue = null
                 };
