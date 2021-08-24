@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace ObjectComparer
 {
@@ -64,6 +65,72 @@ namespace ObjectComparer
                 _differences.AddRange(deletionDifferences);
                 _differences.AddRange(amendmentnDifferences);
             }
+
+            return this;
+        }
+
+        public ObjectTracker<TResult> Track<TObjectTypeToTrack, TKeyType, TPropertyType>(
+            TObjectTypeToTrack before,
+            TObjectTypeToTrack after,
+            params Expression<Func<TObjectTypeToTrack, TPropertyType>>[] fieldToTrackExpressions)
+        {
+            BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public;
+
+            PropertyInfo[] beforePropertyInfos = before.GetType().GetProperties(bindingFlags);
+            PropertyInfo[] afterPropertyInfos = after.GetType().GetProperties(bindingFlags);
+            List<Difference> differences = new List<Difference>();
+
+            for (int i = 0; i < beforePropertyInfos.Length; i++)
+            {
+                Type beforePropertyType = beforePropertyInfos[i].PropertyType;
+
+                bool shouldProcessField = fieldToTrackExpressions.Any(expression => ((MemberExpression)expression.Body).Member.Name == beforePropertyType.Name);
+
+                if(shouldProcessField && (beforePropertyType == typeof(string) || beforePropertyType.GetInterface("IEnumberable") == null))
+                {
+                    string oldValue = beforePropertyInfos[i].GetValue(before).ToString();
+                    string newValue = afterPropertyInfos[i].GetValue(after).ToString();
+                    TypeOfDifference typeOfDifference = TypeOfDifference.Amend;
+
+                    if(oldValue == newValue)
+                    {
+                        continue;
+                    }
+                    else if(oldValue == null && newValue != null)
+                    {
+                        typeOfDifference = TypeOfDifference.Add;
+                    }
+                    else
+                    {
+                        typeOfDifference = TypeOfDifference.Delete;
+                    }
+
+                    Difference difference = new Difference()
+                    {
+                        Type = typeOfDifference,
+                        PropertyName = $"{typeof(TObjectTypeToTrack).Name}.{beforePropertyInfos[i].Name}",
+                        NewValue = newValue,
+                        OldValue = oldValue
+                    };
+
+                    differences.Add(difference);
+                }
+            }
+
+            if (_customAddition == null)
+                throw new ObjectTrackerException("Custom Addition procedure not set.");
+
+            if (_customDeletion == null)
+                throw new ObjectTrackerException("Custom Deletion procedure not set.");
+
+            if (_customAmendment == null)
+                throw new ObjectTrackerException("Custom Amendment procedure not set.");
+
+
+            _differences.AddRange(_customAddition(differences.Where(x => x.Type == TypeOfDifference.Add).ToList()));
+            _differences.AddRange(_customDeletion(differences.Where(x => x.Type == TypeOfDifference.Delete).ToList()));
+            _differences.AddRange(_customAmendment(differences.Where(x => x.Type == TypeOfDifference.Amend).ToList()));
+
 
             return this;
         }
@@ -174,10 +241,10 @@ namespace ObjectComparer
                 amendmentDifferences.Add(amendmentDifference);
             }
 
-            if (_customDeletion == null)
-                throw new ObjectTrackerException("Custom Deletion procedure not set.");
+            if (_customAmendment == null)
+                throw new ObjectTrackerException("Custom Amendment procedure not set.");
 
-            return _customDeletion(amendmentDifferences);
+            return _customAmendment(amendmentDifferences);
         }
 
 
