@@ -259,6 +259,7 @@ namespace ObjectComparer
         {
             SetCustomAddition(CustomAdditionDeletionAmendment);
             SetCustomDeletion(CustomAdditionDeletionAmendment);
+            SetCustomAmendment(CustomAdditionDeletionAmendment);
         }
 
         private List<Difference> CustomAdditionDeletionAmendment(List<Difference> differences) => differences;
