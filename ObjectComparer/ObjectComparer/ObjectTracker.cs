@@ -15,7 +15,7 @@ namespace ObjectComparer
         private Func<List<Difference>, List<TResult>> _customAmendment;
 
         public ObjectTracker()
-            :this(null, null)
+            :this(null, null, null)
         {
             
         }
