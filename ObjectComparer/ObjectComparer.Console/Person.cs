@@ -7,6 +7,8 @@ namespace ObjectComparer.Console
     {
         public string Id { get; set; }
 
+        public string Gender { get; set; }
+
         public List<PersonName> PersonNames { get; set; }
     }
 
@@ -28,6 +30,7 @@ namespace ObjectComparer.Console
             Person razali = new Person()
             {
                 Id = "P1",
+                Gender = "Male",
                 PersonNames = new List<PersonName>()
                 {
                     new PersonName() { Id = "N1", Name = "Razali", Type = "P", LastModified = DateTime.Now},
@@ -37,11 +40,12 @@ namespace ObjectComparer.Console
 
             Person john = new Person()
             {
-                Id = "P2",
+                Id = "P1",
+                Gender = "Female",
                 PersonNames = new List<PersonName>()
                 {
-                    new PersonName() { Id = "N3", Name = "John", Type = "P", LastModified = DateTime.Now},
-                    new PersonName() { Id = "N4", Name = "Johnny", Type = "A", LastModified = DateTime.Now}
+                    new PersonName() { Id = "N1", Name = "John", Type = "P", LastModified = DateTime.Now},
+                    new PersonName() { Id = "N3", Name = "Johnny", Type = "A", LastModified = DateTime.Now}
                 }
             };
 

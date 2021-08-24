@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace ObjectComparer.Console
 {
@@ -9,13 +9,17 @@ namespace ObjectComparer.Console
         {
             List<Person> people = PersonFactory.GetPersons();
 
+            Person before = people.First();
+            Person after = people.Last();
+
             ObjectTracker objectTracker = new ObjectTracker();
 
-            var differences = objectTracker
-                                .Track(people[0].PersonNames, people[1].PersonNames, keyExpression: x => x.Id, x => x.Name, x => x.Type)
-                                .GetDifferences();
+            List<Difference> differences =  objectTracker
+                                                .Track(before, after, x => x.Gender)
+                                                .TrackCollection(before.PersonNames, after.PersonNames, keyExpression: x => x.Id, x => x.Name)
+                                                .GetDifferences();
 
-            foreach (var difference in differences)
+            foreach (Difference difference in differences)
             {
                 System.Console.WriteLine(difference);
             }
