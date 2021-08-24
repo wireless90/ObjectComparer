@@ -49,7 +49,7 @@ namespace ObjectComparer
             return this;
         }
 
-        public ObjectTracker<TResult> Track<TObjectTypeToTrack, TKeyType, TPropertyType>(
+        public ObjectTracker<TResult> TrackCollection<TObjectTypeToTrack, TKeyType, TPropertyType>(
             List<TObjectTypeToTrack> before, 
             List<TObjectTypeToTrack> after,
             Expression<Func<TObjectTypeToTrack, TKeyType>> keyExpression,
