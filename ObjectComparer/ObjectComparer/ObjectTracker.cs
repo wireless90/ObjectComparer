@@ -109,7 +109,7 @@ namespace ObjectComparer
                     {
                         typeOfDifference = TypeOfDifference.Add;
                     }
-                    else
+                    else if(oldValue != null && newValue == null)
                     {
                         typeOfDifference = TypeOfDifference.Delete;
                     }
