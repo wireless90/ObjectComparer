@@ -96,7 +96,7 @@ namespace ObjectComparer
             {
                 Type beforePropertyType = beforePropertyInfos[i].PropertyType;
 
-                bool shouldProcessField = fieldToTrackExpressions.Any(expression => ((MemberExpression)expression.Body).Member.Name == beforePropertyType.Name);
+                bool shouldProcessField = fieldToTrackExpressions.Any(expression => ((MemberExpression)expression.Body).Member.Name == beforePropertyInfos[i].Name);
 
                 if(shouldProcessField && (beforePropertyType == typeof(string) || beforePropertyType.GetInterface("IEnumberable") == null))
                 {
