@@ -17,8 +17,8 @@ namespace ObjectComparer.Console
 
             List<AmendmentHistory> differences =  objectTracker
                                                     .SetCallback(CustomFunction)
-                                                    .Track(before, after, x => x.Gender)
-                                                    .TrackCollection(before.PersonNames, after.PersonNames, keyExpression: x => x.Id, x => x.Name)
+                                                    .Track(before, after, callbackArgument:"123", x => x.Gender)
+                                                    .TrackCollection(before.PersonNames, after.PersonNames, keyExpression: x => x.Id, callbackArgument: null, x => x.Name)
                                                     .GetDifferences();
 
             //foreach (Difference difference in differences)
@@ -26,7 +26,7 @@ namespace ObjectComparer.Console
             //    System.Console.WriteLine(difference);
             //}
         }
-        private static List<AmendmentHistory> CustomFunction(List<Difference> differences)
+        private static List<AmendmentHistory> CustomFunction(List<Difference> differences, object callbackArgument)
     {
         List<AmendmentHistory> amendmentHistories = new List<AmendmentHistory>();
 

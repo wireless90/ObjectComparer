@@ -11,9 +11,9 @@ namespace ObjectComparer
     {
         private List<TResult> _differences;
 
-        private Func<List<Difference>, List<TResult>> _customDeletionCallBack;
-        private Func<List<Difference>, List<TResult>> _customAdditionCallBack;
-        private Func<List<Difference>, List<TResult>> _customAmendmentCallBack;
+        private Func<List<Difference>, object, List<TResult>> _customDeletionCallBack;
+        private Func<List<Difference>, object, List<TResult>> _customAdditionCallBack;
+        private Func<List<Difference>, object, List<TResult>> _customAmendmentCallBack;
 
         public ObjectTracker()
             :this(null, null, null)
@@ -22,34 +22,34 @@ namespace ObjectComparer
         }
 
         public ObjectTracker(
-            Func<List<Difference>, List<TResult>> customAdditionCallBack,
-            Func<List<Difference>, List<TResult>> customDeletionCallBack,
-            Func<List<Difference>, List<TResult>> customAmendmentCallBack)
+            Func<List<Difference>, object, List<TResult>> customAdditionCallBack,
+            Func<List<Difference>, object, List<TResult>> customDeletionCallBack,
+            Func<List<Difference>, object, List<TResult>> customAmendmentCallBack)
         {
             _differences = new List<TResult>();
             _customAdditionCallBack = customAdditionCallBack;
             _customDeletionCallBack = customDeletionCallBack;
             _customAmendmentCallBack = customAmendmentCallBack;
         }
-        public ObjectTracker<TResult> SetAdditionCallback(Func<List<Difference>, List<TResult>> customAdditionCallBack)
+        public ObjectTracker<TResult> SetAdditionCallback(Func<List<Difference>, object, List<TResult>> customAdditionCallBack)
         {
             _customAdditionCallBack = customAdditionCallBack;
             return this;
         }
 
-        public ObjectTracker<TResult> SetDeletionCallback(Func<List<Difference>, List<TResult>> customDeletionCallback)
+        public ObjectTracker<TResult> SetDeletionCallback(Func<List<Difference>, object, List<TResult>> customDeletionCallback)
         {
             _customDeletionCallBack = customDeletionCallback;
             return this;
         }
 
-        public ObjectTracker<TResult> SetAmendmentCallback(Func<List<Difference>, List<TResult>> customAmendmentCallback)
+        public ObjectTracker<TResult> SetAmendmentCallback(Func<List<Difference>, object, List<TResult>> customAmendmentCallback)
         {
             _customAmendmentCallBack = customAmendmentCallback;
             return this;
         }
 
-        public ObjectTracker<TResult> SetCallback(Func<List<Difference>, List<TResult>> customCallback)
+        public ObjectTracker<TResult> SetCallback(Func<List<Difference>, object, List<TResult>> customCallback)
         {
             SetAdditionCallback(customCallback);
             SetDeletionCallback(customCallback);
@@ -57,17 +57,19 @@ namespace ObjectComparer
             return this;
         }
 
+
         public ObjectTracker<TResult> TrackCollection<TObjectTypeToTrack, TKeyType, TPropertyType>(
             List<TObjectTypeToTrack> before, 
             List<TObjectTypeToTrack> after,
-            Expression<Func<TObjectTypeToTrack, TKeyType>> keyExpression,
+            Expression<Func<TObjectTypeToTrack, TKeyType>> keyExpression, 
+            object callbackArgument,
             params Expression<Func<TObjectTypeToTrack, TPropertyType>>[] fieldToTrackExpressions)
         {
             foreach (Expression<Func<TObjectTypeToTrack, TPropertyType>> fieldToTrackExpression in fieldToTrackExpressions)
             {
-                List<TResult> additionDifferences = TrackAdditions(before, after, keyExpression, fieldToTrackExpression);
-                List<TResult> deletionDifferences = TrackDeletions(before, after, keyExpression, fieldToTrackExpression);
-                List<TResult> amendmentnDifferences = TrackAmendments(before, after, keyExpression, fieldToTrackExpression);
+                List<TResult> additionDifferences = TrackAdditions(before, after, keyExpression, fieldToTrackExpression, callbackArgument);
+                List<TResult> deletionDifferences = TrackDeletions(before, after, keyExpression, fieldToTrackExpression, callbackArgument);
+                List<TResult> amendmentnDifferences = TrackAmendments(before, after, keyExpression, fieldToTrackExpression, callbackArgument);
 
                 _differences.AddRange(additionDifferences);
                 _differences.AddRange(deletionDifferences);
@@ -80,6 +82,7 @@ namespace ObjectComparer
         public ObjectTracker<TResult> Track<TObjectTypeToTrack, TPropertyType>(
             TObjectTypeToTrack before,
             TObjectTypeToTrack after,
+            object callbackArgument,
             params Expression<Func<TObjectTypeToTrack, TPropertyType>>[] fieldToTrackExpressions)
 
         {
@@ -136,15 +139,20 @@ namespace ObjectComparer
                 throw new ObjectTrackerException("Custom Amendment procedure not set.");
 
 
-            _differences.AddRange(_customAdditionCallBack(differences.Where(x => x.Type == TypeOfDifference.Add).ToList()));
-            _differences.AddRange(_customDeletionCallBack(differences.Where(x => x.Type == TypeOfDifference.Delete).ToList()));
-            _differences.AddRange(_customAmendmentCallBack(differences.Where(x => x.Type == TypeOfDifference.Amend).ToList()));
+            _differences.AddRange(_customAdditionCallBack(differences.Where(x => x.Type == TypeOfDifference.Add).ToList(), callbackArgument));
+            _differences.AddRange(_customDeletionCallBack(differences.Where(x => x.Type == TypeOfDifference.Delete).ToList(), callbackArgument));
+            _differences.AddRange(_customAmendmentCallBack(differences.Where(x => x.Type == TypeOfDifference.Amend).ToList(), callbackArgument));
 
 
             return this;
         }
 
-        private List<TResult> TrackAdditions<TObjectTypeToTrack, TKeyType, TPropertyType>(List<TObjectTypeToTrack> before, List<TObjectTypeToTrack> after, Expression<Func<TObjectTypeToTrack, TKeyType>> keyExpression, Expression<Func<TObjectTypeToTrack, TPropertyType>> fieldToTrackExpression)
+        private List<TResult> TrackAdditions<TObjectTypeToTrack, TKeyType, TPropertyType>(
+            List<TObjectTypeToTrack> before, 
+            List<TObjectTypeToTrack> after, 
+            Expression<Func<TObjectTypeToTrack, TKeyType>> keyExpression, 
+            Expression<Func<TObjectTypeToTrack, TPropertyType>> fieldToTrackExpression, 
+            object callbackArgument)
         {
             List<TKeyType> addedKeys = after
                                             .Select(keyExpression.Compile())
@@ -174,14 +182,15 @@ namespace ObjectComparer
             if (_customAdditionCallBack == null)
                 throw new ObjectTrackerException("Custom Addition procedure not set.");
 
-            return _customAdditionCallBack(addedDifferences);
+            return _customAdditionCallBack(addedDifferences, callbackArgument);
         }
 
         private List<TResult> TrackDeletions<TObjectTypeToTrack, TKeyType, TPropertyType>(
             List<TObjectTypeToTrack> before, 
             List<TObjectTypeToTrack> after, 
             Expression<Func<TObjectTypeToTrack, TKeyType>> keyExpression, 
-            Expression<Func<TObjectTypeToTrack, TPropertyType>> fieldToTrackExpression)
+            Expression<Func<TObjectTypeToTrack, TPropertyType>> fieldToTrackExpression,
+            object callbackArgument)
         {
             List<TKeyType> deletedKeys = before
                                             .Select(keyExpression.Compile())
@@ -211,14 +220,15 @@ namespace ObjectComparer
             if (_customDeletionCallBack == null)
                 throw new ObjectTrackerException("Custom Deletion procedure not set.");
 
-            return _customDeletionCallBack(deletionDifferences);
+            return _customDeletionCallBack(deletionDifferences, callbackArgument);
         }
 
         private List<TResult> TrackAmendments<TObjectTypeToTrack, TKeyType, TPropertyType>(
             List<TObjectTypeToTrack> before,
             List<TObjectTypeToTrack> after,
             Expression<Func<TObjectTypeToTrack, TKeyType>> keyExpression,
-            Expression<Func<TObjectTypeToTrack, TPropertyType>> fieldToTrackExpression)
+            Expression<Func<TObjectTypeToTrack, TPropertyType>> fieldToTrackExpression, 
+            object callbackArgument)
         {
             List<TKeyType> amendedKeys = after
                                             .Select(keyExpression.Compile())
@@ -253,7 +263,7 @@ namespace ObjectComparer
             if (_customAmendmentCallBack == null)
                 throw new ObjectTrackerException("Custom Amendment procedure not set.");
 
-            return _customAmendmentCallBack(amendmentDifferences);
+            return _customAmendmentCallBack(amendmentDifferences, callbackArgument);
         }
 
 
@@ -269,6 +279,6 @@ namespace ObjectComparer
             SetCallback(CustomAdditionDeletionAmendmentCallback);
         }
 
-        private List<Difference> CustomAdditionDeletionAmendmentCallback(List<Difference> differences) => differences;
+        private List<Difference> CustomAdditionDeletionAmendmentCallback(List<Difference> differences, object callbackArgument) => differences;
     }
 }
