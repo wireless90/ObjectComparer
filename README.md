@@ -1,5 +1,5 @@
 # ObjectComparer
-Project aimed to track Additions, Deletions and Amendments made to an Obketc or a List of Objects.
+Project aimed to track Additions, Deletions and Amendments made to an Object or a List of Objects.
 
 
 # Basic Example
